@@ -1,22 +1,24 @@
 from splinter import Browser
 from bs4 import BeautifulSoup  as bs
 from webdriver_manager.chrome import ChromeDriverManager
+import pandas as pd
 
 def scrape():
     # browser = init_browser()
     executable_path = {'executable_path': ChromeDriverManager().install()}
     browser = Browser('chrome', **executable_path, headless=False)
 
-    mars_lattest_news = {}
+    mars_collection = {}
+
     url = "https://redplanetscience.com/"
     browser.visit(url)
 
     html = browser.html
     soup = bs(html, "html.parser")
 
-    mars_lattest_news["news_title"] = soup.find("div", class_="content_title").get_text()
-    mars_lattest_news["news_p"] = soup.find("div", class_="article_teaser_body").get_text()
-    mars_lattest_news["news_date"] = soup.find("div", class_="list_date").get_text()
+    mars_collection["news_title"] = soup.find("div", class_="content_title").get_text()
+    mars_collection["news_p"] = soup.find("div", class_="article_teaser_body").get_text()
+    mars_collection["news_date"] = soup.find("div", class_="list_date").get_text()
 
     # Set up Splinter
     executable_path = {'executable_path': ChromeDriverManager().install()}
@@ -30,6 +32,8 @@ def scrape():
 
     relative_image_path = soup.find_all('img')[1]['src']
     feature_image = featured_img_url + relative_image_path
+
+    mars_collection["featured_image"] = feature_image
 
     executable_path = {'executable_path': ChromeDriverManager().install()}
     browser = Browser('chrome', **executable_path, headless=False)
@@ -63,3 +67,21 @@ def scrape():
         {"title": third_title, "img_url": third_img},
         {"title": fourth_title, "img_url":fourth_img},
     ]
+
+    mars_collection["hemisphere_image_urls"] = hemisphere_image_urls
+
+    mars_facts_url = 'https://galaxyfacts-mars.com/'
+
+    tables = pd.read_html(mars_facts_url)
+    mars_info_df = tables[0]
+    mars_info_df.columns = mars_info_df.iloc[0]
+    mars_info_df = mars_info_df.iloc[1:].reset_index(drop=True)
+    mars_info_table_html = mars_info_df.to_html(classes="table")
+    mars_info_table_html.replace('\n', '')
+    mars_info_df.to_html('mars_info_table.html')
+
+    mars_collection["mars_info_df"] = mars_info_table_html
+
+    browser.quit()
+
+    return (mars_collection)
