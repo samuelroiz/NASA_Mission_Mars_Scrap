@@ -25,7 +25,7 @@ def home():
 def scrape():
 
     # Run the scrape function
-    mars_data = scrape_mars.scrape_info()
+    mars_data = scrape_mars.scrape()
 
     # Insert the record
     mongo.db.nasa_data.update_one({}, {"$set": mars_data}, upsert=True)
